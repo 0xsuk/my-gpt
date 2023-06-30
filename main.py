@@ -38,7 +38,36 @@ def get_batch(split):
     return x, y
 
 xb, yb = get_batch('train')
+# print(xb)
+# xb = tensor([[24, 43, 58,  5, 57,  1, 46, 43],
+#             [44, 53, 56,  1, 58, 46, 39, 58],
+#             [52, 58,  1, 58, 46, 39, 58,  1],
+#             [25, 17, 27, 10,  0, 21,  1, 54]]) (4, 8)
 # print('inputs:')
 # print(xb.shape)
-print('targets:')
-print(yb.shape)
+# print('targets:')
+# print(yb.shape)
+
+
+import torch.nn as nn
+from torch.nn import functional as F
+
+class BigramLanguageModel(nn.Module):
+    def __init__(self, vocab_size):
+        super().__init__()
+        self.token_embedding_table = nn.Embedding(vocab_size, vocab_size)
+        
+    def forward(self, idx, targets):
+        # predict scores for the next char
+        logits = self.token_embedding_table(idx) # (Batch, Time, Channel(tensor))
+        
+        B, T, C = logits.shape
+        logits = logits.view(B*T, C) # reshape (B,T,C) to (B*T, C) to pass it to cross_entry function
+        targets = targets.view(B*T)
+        loss = F.cross_entropy(logits, targets)
+        return logits, loss
+
+m = BigramLanguageModel(vocab_size)
+logits, loss = m(xb, yb)
+print(logits.shape)
+print(loss)
